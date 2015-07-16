@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Game of Life</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Game Logic -->
+    <script type="text/javascript" src="assets/js/life.js"></script> 
+
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+    <!-- Navbar  -->
+    <div class="topbar">
+        <div class="container">
+                <a href="#" class="brand">
+                    Game of Life
+                </a>
+                <div class="configurations">
+                    <ul class="game-controls">
+                        <li>
+                            <button class="step forward">
+                                &rarr; Step forward
+                            </button>
+                        </li>
+                        <li>
+                            <button class="step back">
+                                &larr; Step back
+                            </button>
+                        </li>
+                        <li>
+                            <button class="play">
+                                &#9658; Play
+                            </button>
+                        </li>
+                        <li>
+                            <button class="rewind">
+                                &#8635; Rewind
+                            </button>
+                        </li>
+                        <li>
+                            <input type="range" name="speed" min="1" max="200"/> Speed
+                        </li>
+                    </ul>
+                    <ul class="board-size">
+                        <li class="width">
+                            <input name="width" type="number" min="5" />
+                        </li>
+                        <li class="height">
+                            <input name="width" type="number" min="5" />
+                        </li>
+                        <li class="board-rules">
+                            <li>
+                                <input type="radio" name="board-rules" value="fixed" checked> Fixed
+                            </li>
+                            <li>
+                                <input type="radio" name="board-rules" value="dynamic" checked> Dynamic
+                            </li>
+                            <li>
+                                <input type="radio" name="board-rules" value="wrapped" checked> Male
+                            </li>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+    </div>
+    <div class="board">
+
+    </div>
+</body>
+
+</html>
