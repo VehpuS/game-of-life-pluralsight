@@ -1,0 +1,45 @@
+* {
+	padding: 0px;
+	margin: 0px;
+}
+
+li {
+	display: inline-block;
+}
+
+fieldset {
+	display: inline-block;
+	border: 0px;
+	padding: 0px;
+	margin: 0px;
+}
+
+.game-controls {
+	width: 800px;
+	background-color: teal;
+}
+
+.board-size {
+	width: 500px;
+	background-color: green;
+}
+
+.board-rules {
+	width: 500px;
+	background-color: yellow;
+}
+
+.game-of-life {
+	display: inline-block;
+	vertical-align: center;
+	font-size: 4em;
+	font-family: Lobster, David;
+}
+
+.configurations {
+	display: inline-block;
+	font-family: Helvetica;
+}
+
+.speed {
+}
