@@ -19,12 +19,14 @@ function clearHtml(htmlObj) {
 // Game logic
 (function() {
 	// Class definition with private attributes / methods
-	var _ = self.Life = function(starting_board) {
+	var _ = self.Life = function(starting_board, gameRules) {
 		// A 2x2 array of values 1 (alive) or 0 (dead)
 		this.starting_board = boardCopy(starting_board);
 
 		this.height = this.starting_board.length;
 		this.width = this.starting_board[0].length;
+
+		this.gameRules = gameRules;
 
 		this.previous_boards = [];
 		this.board = boardCopy(starting_board);
@@ -36,14 +38,20 @@ function clearHtml(htmlObj) {
 		return board.slice().map(function(row) {return row.slice();});
 	};
 
-	function getNumNeighbors(board, x, y) {
-		var prevRow = board[y - 1] || []
-		var currRow = board[y]
-		var nextRow = board[y + 1] || []
+	function getNumNeighbors(board, x, y, wrapped, width, height) {
+		var previousX = wrapped ? (x - 1 + width) % width : x - 1;
+		var nextX = wrapped ? (x + 1) % width : x + 1;
 
-		return [prevRow[x - 1],	prevRow[x],	prevRow[x + 1],
-				currRow[x - 1],				currRow[x + 1],
-				nextRow[x - 1],	nextRow[x],	nextRow[x + 1]]
+		var previousY = wrapped ? (y - 1 + height) % height : y - 1;
+		var nextY = wrapped ? (y + 1) % height : y + 1;
+
+		var prevRow = board[previousY] || []
+		var currRow = board[y]
+		var nextRow = board[nextY] || []
+		
+		return [prevRow[previousX],	prevRow[x],	prevRow[nextX],
+				currRow[previousX],				currRow[nextX],
+				nextRow[previousX],	nextRow[x],	nextRow[nextX]]
 				.reduce(function(prev, cur) {
 					return prev + !!cur;
 				}, 0);
@@ -57,21 +65,37 @@ function clearHtml(htmlObj) {
 	_.prototype = {
 		next: function() {
 			previoud_board = boardCopy(this.board);
+			extendWidth = false;
+			extendHeight = false;
 
 			for (var y = 0; y < this.height; y++) {
 				for (var x = 0; x < this.width; x++) {
-					var neighbors = getNumNeighbors(previoud_board, x, y);
-					var isAlive = this.board[y][x];
+					var neighbors = getNumNeighbors(previoud_board, x, y, this.gameRules === "wrapped", this.width, this.height);
+					var isAlive = !!this.board[y][x];
 					if (isAlive && (neighbors > 3 || neighbors < 2)) {
 						this.board[y][x] = dead;
 					} else if (!isAlive && neighbors === 3) {
 						this.board[y][x] = alive;
+
+						// if (this.gameRules ==='dynamic' && y == this.height - 1) {
+						// 	extendHeight = true;
+						// }
+						// if (this.gameRules ==='dynamic' && y == this.width - 1) {
+						// 	extendWidth = true;
+						// }
 					}
-					
 				}
 			}
 
 			this.previous_boards.push(previoud_board);
+
+			// Need to change external control as well
+			// if (extendHeight) {
+			// 	this.height++;
+			// }
+			// if (extendWidth) {
+			// 	this.width++;
+			// }
 		},
 
 		back: function() {
@@ -102,6 +126,26 @@ function clearHtml(htmlObj) {
 
 		getBoard: function() {
 			return this.board;
+		},
+
+		setBoard: function(newBoard) {
+			for (var y = 0; y < this.height; y++) {
+				for (var x = 0; x < this.width; x++) {
+					this.board[y][x] = !!newBoard && !!newBoard[y] && !!newBoard[y][x];
+				}
+			}
+		},
+		isFirst: function() {
+			return this.previous_boards.length === 0;
+		},
+		getWidth: function() {
+			return this.width;
+		},
+		getHeight: function() {
+			return this.height;
+		},
+		getGeneration: function() {
+			return this.previous_boards.length + 1;
 		}
 	};
 })();
@@ -109,31 +153,60 @@ function clearHtml(htmlObj) {
 // View logic - recieves the HTML object and grid dimentions and draws the game board.
 (function() {
 	// Class definition with private attributes / methods
-	var _ = self.View = function(gameGrid) {
+	var _ = self.View = function(gameGrid, backButton, nextButton, rewindButton, playButton, pauseButton, generationDisplay, speedDisplay, speedControl, clearButton, boardSizeControls, widthControl, heightControl, cellSizeControl, rulesControl) {
 		// Will hold a <table> element that will display the game grid
-		this.table = gameGrid;
+		this.gameGrid = gameGrid;
+
+		this.backButton = backButton;
+		this.nextButton = nextButton;
+		this.rewindButton = rewindButton;
+		this.playButton = playButton;
+		this.pauseButton = pauseButton;
+		this.generationDisplay = generationDisplay;
+		this.speedDisplay = speedDisplay;
+		this.speedControl = speedControl;
+		this.clearButton = clearButton;
+
+		this.boardSizeControls = boardSizeControls;
+		this.widthControl = widthControl;
+		this.heightControl = heightControl;
+		this.cellSizeControl = cellSizeControl;
+		this.rulesControl = rulesControl;
+
+		this.runGame = false;
+
+		this.updateSize();
+		this.updateCellSize();
+
+		this.addEventListeners();
 	};
 
 	// Scope constants
 
 	// Public methods
 	_.prototype = {
-		updateSize: function(width, height) {
-			this.height = height;
-			this.width = width;
+		updateSize: function() {
+			if (this.game) {
+				oldBoard = this.game.getBoard();
+			} else {
+				oldBoard = [[]];
+			}
+			
+			this.width = this.widthControl.value;
+			this.height = this.heightControl.value;
 
+			this.createGrid(oldBoard);
+		},
+		createGrid: function(board) {
 			this.checkboxes = []
 
-			clearHtml(this.table);
+			clearHtml(this.gameGrid);
 			var loadingMessage = document.createDocumentFragment();
 			var message = document.createElement("section");
 			message.innerHTML = "Rebuilding game grid...";
 			loadingMessage.appendChild(message);
-			this.table.appendChild(loadingMessage);
+			this.gameGrid.appendChild(loadingMessage);
 
-			this.createGrid();
-		},
-		createGrid: function() {
 			/*  DocumentFragments are DOM Nodes. They are never part of the main DOM tree. 
 			The usual use case is to create the document fragment, append elements to the 
 			document fragment and then append the document fragment to the DOM tree. In the 
@@ -154,6 +227,7 @@ function clearHtml(htmlObj) {
 					var checkbox = document.createElement("input");
 					checkbox.type = "checkbox";
 					checkbox.className = "gameCell-" + x + "-" + y;
+					checkbox.style["width"] = checkbox.style["height"] = '' + this.cellSize + 'px';
 					this.checkboxes[y][x] = checkbox;
 
 					cell.appendChild(checkbox);
@@ -162,10 +236,18 @@ function clearHtml(htmlObj) {
 				fragment.appendChild(row);
 			}
 
-			clearHtml(this.table);
-			this.table.appendChild(fragment);
+			clearHtml(this.gameGrid);
+			this.gameGrid.appendChild(fragment);
 
 			this.initGame();
+
+			this.game.setBoard(board);
+
+			this.displayBoard(board);
+
+			this.updateSpeed();
+
+			this.pause();
 		},
 		getTrueFalseGameGrid: function() {
 			return this.checkboxes.map(function(row) {
@@ -175,82 +257,128 @@ function clearHtml(htmlObj) {
 			});
 		},
 		initGame: function() {
-			// TODO: disable back button
-			this.game = new Life(this.getTrueFalseGameGrid());
+			this.rules = this.rulesControl.querySelector(':checked').value;
+			this.game = new Life(this.getTrueFalseGameGrid(), this.rules);
+			this.backButton.disabled = true;
+			this.generationDisplay.value = this.game.getGeneration();
 		},
-		displayBoard: function() {
-			var newBoard = this.game.getBoard();
-
+		displayBoard: function(newBoard) {
 			for (var y = 0; y < this.height; y++) {
 				for (var x = 0; x < this.width; x++) {
-					this.checkboxes[y][x].checked = newBoard[y][x];
+					this.checkboxes[y][x].checked = !!newBoard && !!newBoard[y] && !!newBoard[y][x];
+				}
+			}
+
+			this.backButton.disabled = this.game.isFirst();
+			this.generationDisplay.value = this.game.getGeneration();
+		},
+		nextGeneration: function() {
+			this.game.next();
+			// this.width = this.game.getWidth();
+			// this.height = this.game.getHeight();
+			this.displayBoard(this.game.getBoard());
+		},
+		lastGeneration: function() {
+			this.game.back();
+			this.displayBoard(this.game.getBoard());
+		},
+		rewind: function() {
+			this.game.rewind();
+			this.displayBoard(this.game.getBoard());
+		},
+		updateSpeed: function() {
+			this.speed = 1000 / this.speedControl.value;
+			this.speedDisplay.value = '' + (1000 / this.speedControl.value) + ' m/s';
+			if (this.isRunning()) {
+				this.play();
+			}
+		},
+		play: function() {
+			this.pause();
+			var _ = this;
+			this.runGame = setInterval(function() {return _.nextGeneration();}, this.speed);
+			this.playButton.style["display"] = "none";
+			this.pauseButton.style["display"] = "inline-block";
+		},
+		pause: function() {
+			if (this.runGame) {
+				clearInterval(this.runGame);
+			}
+			this.runGame = false;
+
+			this.pauseButton.style["display"] = "none";
+			this.playButton.style["display"] = "inline-block";
+		},
+		clearBoard: function() {
+			this.pause();
+			return this.createGrid([]);
+		},
+		updateCellSize: function() {
+			this.cellSize = this.cellSizeControl.value;
+			for (var y = 0; y < this.height; y++) {
+				for (var x = 0; x < this.width; x++) {
+					this.checkboxes[y][x].style["width"] = this.checkboxes[y][x].style["height"] = '' + this.cellSize + 'px';;
 				}
 			}
 		},
-		nextGeneration: function() {
-			// TODO: enable back button
-			this.game.next();
-			this.displayBoard();
+		isRunning: function() {
+			return !!this.runGame;
 		},
-		lastGeneration: function() {
-			// TODO: check if back button should be disabled
-			this.game.back();
-			this.displayBoard();
-		},
-		rewind: function() {
-			// TODO: check if back button should be disabled
-			this.game.rewind();
-			this.displayBoard();
+		addEventListeners: function() {
+			// Add event listeners
+			gameObject = this;
+
+			this.gameGrid.addEventListener("mouseover", function(e) {
+				if(e.buttons == 1 || e.buttons == 3) {
+					e.target.checked = !e.target.checked;
+					return gameObject.initGame();
+			    }
+			});
+			this.gameGrid.addEventListener("click", function() {return gameObject.initGame();});
+
+			this.backButton.addEventListener("click", function() {return gameObject.lastGeneration();});
+			this.nextButton.addEventListener("click", function() {return gameObject.nextGeneration();});
+			this.rewindButton.addEventListener("click", function() {return gameObject.rewind();});
+			this.playButton.addEventListener("click", function() {return gameObject.play();});
+			this.pauseButton.addEventListener("click", function() {return gameObject.pause();});
+			this.boardSizeControls.addEventListener("change", function() {return gameObject.updateSize();});
+			this.cellSizeControl.addEventListener("change", function() {return gameObject.updateCellSize();})
+			this.rulesControl.addEventListener("change", function() {return gameObject.initGame();});
+			this.speedControl.addEventListener("change", function() {return gameObject.updateSpeed();});
+			this.clearButton.addEventListener("click", function() {return gameObject.clearBoard();});
 		}
 	}
 })();
 
-function updateGameGridSize() {
-	var newWidth = document.getElementsByClassName('widthControl')[0].value;
-	var newHeight = document.getElementsByClassName('heightControl')[0].value;
-	mainGame.updateSize(newWidth, newHeight);
-}
-
+gameGrid = document.getElementsByClassName("gameGrid")[0];
+backButton = document.getElementsByClassName('back')[0];
+nextButton = document.getElementsByClassName('next')[0];
+rewindButton = document.getElementsByClassName('rewind')[0];
+playButton = document.getElementsByClassName('play')[0];
+pauseButton = document.getElementsByClassName('pause')[0];
+generationDisplay = document.getElementsByClassName('generationDisplay')[0];
+speedDisplay = document.getElementsByClassName('speedDisplay')[0];
+speedControl = document.getElementsByClassName('speedControl')[0];
+clearButton = document.getElementsByClassName('clear')[0];
+boardSizeControls = document.getElementsByClassName('board-size')[0];
+widthControl = document.getElementsByClassName('widthControl')[0];
+heightControl = document.getElementsByClassName('heightControl')[0];
+cellSizeControl = document.getElementsByClassName('cellSizeControl')[0];
+rulesControl = document.getElementsByClassName('rulesControl')[0];
 
 // Setup initial game
-var boardSizeControls = document.getElementsByClassName('board-size')[0];
-
-var nextButton = document.getElementsByClassName('next')[0];
-var backButton = document.getElementsByClassName('back')[0];
-var rewindButton = document.getElementsByClassName('rewind')[0];
-
-var gameGrid = document.getElementsByClassName('gameGrid')[0];
-
-var mainGame = new View(document.getElementsByClassName("gameGrid")[0]);
-updateGameGridSize();
-
-boardSizeControls.addEventListener("change", updateGameGridSize);
-gameGrid.addEventListener("click", function() {
-							mainGame.initGame();
-						});
-nextButton.addEventListener("click", function() {
-							mainGame.nextGeneration();
-						});
-backButton.addEventListener("click", function() {
-							mainGame.lastGeneration();
-						});
-rewindButton.addEventListener("click", function() {
-							mainGame.rewind();
-						});
-
-// Testing functions
-function testGameLogic() {
-	var game = new Life([[false,	true,	false],
-					 	 [false,	true,	false],
-				 		 [false,	true,	false]]);
-
-	console.log(toStr(game));
-	game.next();
-	console.log(toStr(game));
-	game.back();
-	console.log(toStr(game));
-}
-
-function testGameView() {
-	this.gameGrid = new View(document.getElementsByClassName("gameGrid")[0], 3, 3);
-}
+var mainGame = new View(gameGrid,
+						backButton,
+						nextButton,
+						rewindButton,
+						playButton,
+						pauseButton,
+						generationDisplay,
+						speedDisplay,
+						speedControl,
+						clearButton,
+						boardSizeControls,
+						widthControl,
+						heightControl,
+						cellSizeControl,
+						rulesControl);

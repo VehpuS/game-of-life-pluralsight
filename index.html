@@ -15,8 +15,8 @@
         <header class="game-of-life">
             Game of Life
         </header>
-<!--         <form class="configurations">
-            <fieldset> -->
+        <section class="configurations">
+            <section class="first-row">
                 <ul class="game-controls">
                     <li>
                         <button class="step back">
@@ -32,6 +32,9 @@
                         <button class="play">
                             &#9658; Play
                         </button>
+                        <button class="pause">
+                            || Pause
+                        </button>
                     </li>
                     <li>
                         <button class="rewind">
@@ -39,57 +42,77 @@
                         </button>
                     </li>
                     <li>
-                        <input type="range" class="speed" name="speed" min="1" max="200"/> Speed
+                        <label>
+                            Generation:
+                        </label>
+                        <input type="textarea" class="generationDisplay" disabled="true" value="1" />
+                    </li>
+                    <li>
+                        <label>
+                            Speed:
+                        </label>
+                        <input type="textarea" class="speedDisplay" disabled="true" />
+                        <input type="range" class="speedControl" name="speed" min="1" max="100" value="50"/> 
+                    </li>
+                    <li>
+                        <button class="clear">
+                            Clear
+                        </button>
                     </li>
                 </ul>
-<!--             </fieldset>
-            <fieldset> -->
+            </section>
+            <section class="second-row">
                 <ul class="board-size">
                     <li class="width">
                         <label>
                             Width
                         </label>
-                        <input name="width" type="number" min="5" class="widthControl" value="5"/>
+                        <input name="width" type="number" min="5" class="widthControl" value="84"/>
                     </li>
                     <li class="height">
                         <label>
                             Height
                         </label>
-                        <input name="height" type="number" min="5" class="heightControl" value="5"/>
+                        <input name="height" type="number" min="5" class="heightControl" value="33"/>
                     </li>
                 </ul>
-<!--             </fieldset>
-            <fieldset> -->
-                <ul class="board-rules">
+                <ul class="styling">
+                    <li class="cellSize">
+                        <label>
+                            Cell Size
+                        </label>
+                        <input name="cellSize" type="number" min="5" max="20" class="cellSizeControl" value="15" />
+                    </li>
+                </ul>
+                <ul class="rulesControl">
                     <li>
-                        <input type="radio" name="board-rules" value="fixed" checked>
+                        <input type="radio" name="game-rules" class="game-rules" value="fixed" checked>
                         <label>
                             Fixed
                         </label>
                     </li>
                     <li>
-                        <input type="radio" name="board-rules" value="dynamic"> 
-                        <label>
-                            Dynamic
-                        </label>
-                    </li>
-                    <li>
-                        <input type="radio" name="board-rules" value="wrapped">
+                        <input type="radio" name="game-rules" class="game-rules" value="wrapped">
                         <label>
                             Wrapped
                         </label>
                     </li>
+                    <li>
+                        <input type="radio" name="game-rules" class="game-rules" value="dynamic" disabled="true"> 
+                        <label>
+                            Dynamic
+                        </label>
+                    </li>
                 </ul>
-<!--             </fieldset>
-        </form> -->
+            </section>
+        </section>
     </section>
     <section class="gameArea">
         <table class="gameGrid">
-            
+            <!-- Game Logic -->
+            <script type="text/javascript" src="assets/js/life.js"></script>
         </table>
     </section>
-    <!-- Game Logic -->
-    <script type="text/javascript" src="assets/js/life.js"></script> 
 </body>
 
 </html>

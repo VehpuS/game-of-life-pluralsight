@@ -3,43 +3,131 @@
 	margin: 0px;
 }
 
-li {
-	display: inline-block;
-}
 
-fieldset {
-	display: inline-block;
-	border: 0px;
-	padding: 0px;
-	margin: 0px;
-}
 
-.game-controls {
-	width: 800px;
-	background-color: teal;
-}
-
-.board-size {
-	width: 500px;
-	background-color: green;
-}
-
-.board-rules {
-	width: 500px;
-	background-color: yellow;
-}
-
-.game-of-life {
-	display: inline-block;
-	vertical-align: center;
-	font-size: 4em;
-	font-family: Lobster, David;
-}
-
-.configurations {
-	display: inline-block;
+.topbar {
 	font-family: Helvetica;
-}
+	width: 100%;
+	height: 5%;
+	background-color: #007;
+	color: white;
+}	
+	
+	.game-of-life {
+		display: inline-block;
+		font-size: 3em;
+		font-family: Lobster, David;
+		height: 100%;
+		margin: 0.3em;
+		text-shadow: -3px -2px 2px #555;
+	}
 
-.speed {
+	.topbar li {
+		display: inline-block;
+	}
+
+	.topbar button {
+		height: 2em;
+		width: 6em;
+		background-color: #CCC;
+		border: 0px;
+		box-shadow: -1px -1px 1px white;
+	}
+
+		.topbar button:hover {
+			background-color: white;
+			box-shadow: -2px -2px 1px #CCC;
+		}
+
+		.topbar button:disabled:hover {
+			background-color: #AAA;
+		}
+
+	.topbar input[type="textarea"] {
+		height: 2em;
+		font-size: 1em;
+		/*border: 0px;*/
+	}
+
+	.topbar input[type="number"] {
+		height: 1em;
+		width: 3em;
+		font-size: 1em;
+		text-align: center;
+		/*border: 0px;*/
+	}
+
+	.topbar input[type="textarea"] {
+		height: 2em;
+		width: 4.2em;
+		background: transparent;
+		text-align: center;
+		color: white;
+		border: 0px;
+	}
+
+	.configurations {
+		display: inline-block;
+		/*height: 4em;*/
+		margin: auto auto;
+	}
+
+		.first-row, .second-row {
+			display: block;
+			margin: 0.5em;
+		}
+
+			.speedControl {
+				/*height: 2em;*/
+				width: 12em;
+				vertical-align: middle;
+			}
+
+			.board-size {
+				display: inline-block;
+			}
+
+			.styling {
+				display: inline-block;
+			}
+
+			.rulesControl {
+				display: inline-block;
+			}
+
+.gameArea {
+	display: block;
+	position: absolute;
+	overflow: scroll;
+	width: 100%;
+	height: 85%;
+
 }
+	.gameGrid {
+		margin: auto;
+		margin-spacing: 0;
+		border-spacing: 0;
+		margin-collapse: collapse;
+		border-collapse: collapse;
+	}
+		.gameGrid td {
+			border: 1px solid black;
+		}
+
+		.gameGrid input[type="checkbox"] {
+			-webkit-appearance: none;
+			-moz-appearance: none;
+			appearance: none;
+			display: block;
+			/*width: 15px;*/
+			/*height: 15px;*/
+			border: 0;
+			background: white;
+			box-shadow: 0;
+			padding: 0;
+			margin: 0;
+		}
+
+		.gameGrid input[type="checkbox"]:checked {
+			background: black;
+		}
