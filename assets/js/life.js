@@ -128,6 +128,11 @@ function clearHtml(htmlObj) {
 				}
 			}
 		},
+        getPreviousBoard: function() {
+            if (!this.isFirst()) {
+                return this.previous_boards[this.getGeneration() - 2];
+            }
+        },
 		isFirst: function() {
 			return this.previous_boards.length === 0;
 		},
