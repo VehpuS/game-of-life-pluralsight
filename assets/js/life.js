@@ -181,6 +181,27 @@ function clearHtml(htmlObj) {
 		this.addEventListeners();
 	};
 
+    // Helper functions
+    var checkboxTouchSetup = function(gameObject, checkbox) {
+        checkbox.addEventListener("touchenter", function(e) {
+            console.log("touchenter");
+            console.log(e);
+            e.preventDefault();  // Dragging won't scroll on touch devices
+            e.target.checked = !e.target.checked;
+            return gameObject.initGame();
+//            if (e.path[0]) {
+//                console.log(e.path[0]);
+//                var touch = e.path[0]; //[e.touches.length - 1];
+//                console.log(touch);
+//                touch.checked = !touch.checked;
+//                return gameObject.initGame();
+//            }
+//            else {
+//                console.log(e);
+//            }
+        });
+    };
+    
 	// Scope constants
 
 	// Public methods
@@ -231,9 +252,10 @@ function clearHtml(htmlObj) {
 					var cell = document.createElement("td");
 
 					var checkbox = document.createElement("input");
-					checkbox.type = "checkbox";
-					checkbox.className = "gameCell-" + x + "-" + y;
-					checkbox.style["width"] = checkbox.style["height"] = '' + this.cellSize + 'px';
+                    checkbox.type = "checkbox";
+                    checkbox.className = "gameCell-" + x + "-" + y;
+                    checkbox.style["width"] = checkbox.style["height"] = '' + this.cellSize + 'px';
+//                    checkboxTouchSetup(this, checkbox);
 					this.checkboxes[y][x] = checkbox;
 
 					cell.appendChild(checkbox);
@@ -340,6 +362,28 @@ function clearHtml(htmlObj) {
 					return gameObject.initGame();
 			    }
 			});
+            // Allows for multitouch gestures
+            this.gameGrid.addEventListener("touchstart", function(e) {
+                if (e.touches.length == 1) { 
+                    e.preventDefault();  // Dragging with one finger won't scroll on touch devices
+                }
+			});
+            this.gameGrid.addEventListener("touchmove", function(e) {
+                var touch = e.touches[0];
+                var checkbox = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                }
+                if (gameObject.runGame) {
+                    return gameObject.initGame();
+                }
+			});
+            this.gameGrid.addEventListener("touchend", function() {
+                return gameObject.initGame();
+			});
+            this.gameGrid.addEventListener("touchcancel", function() {
+                return gameObject.initGame();
+			});
 			this.gameGrid.addEventListener("click", function() {return gameObject.initGame();});
 			this.backButton.addEventListener("click", function() {return gameObject.lastGeneration();});
 			this.nextButton.addEventListener("click", function() {return gameObject.nextGeneration();});
@@ -347,7 +391,10 @@ function clearHtml(htmlObj) {
 			this.playButton.addEventListener("click", function() {return gameObject.play();});
 			this.pauseButton.addEventListener("click", function() {return gameObject.pause();});
 			this.boardSizeControls.addEventListener("change", function() {return gameObject.updateSize();});
-            this.autoFitButton.addEventListener("click", function() {gameObject.autoFit();return gameObject.updateSize();});
+            this.autoFitButton.addEventListener("click", function() {
+                gameObject.autoFit();
+                return gameObject.updateSize();
+            });
 			this.cellSizeControl.addEventListener("change", function() {return gameObject.updateCellSize();});
 			this.rulesControl.addEventListener("change", function() {return gameObject.initGame();});
 			this.speedControl.addEventListener("change", function() {return gameObject.updateSpeed();});
