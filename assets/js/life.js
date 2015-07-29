@@ -1,15 +1,8 @@
+/*jslint browser: true*/
 // Global Helpers
-function toBool(x) {;
-	return !!(x);
-};
-
 function toInt(x) {
 	return +(x);
-};
-
-function toStr(x) {
-	return (x) + '';
-};
+}
 
 // Helpers
 function clearHtml(htmlObj) {
@@ -19,7 +12,7 @@ function clearHtml(htmlObj) {
 // Game logic
 (function() {
 	// Class definition with private attributes / methods
-	var _ = self.Life = function(starting_board, gameRules) {
+	var _ = this.Life = function(starting_board, gameRules) {
 		// A 2x2 array of values 1 (alive) or 0 (dead)
 		this.starting_board = boardCopy(starting_board);
 
@@ -36,7 +29,7 @@ function clearHtml(htmlObj) {
 	function boardCopy(board) {
 		// copies rows pointing to references of columents
 		return board.slice().map(function(row) {return row.slice();});
-	};
+	}
 
 	function getNumNeighbors(board, x, y, wrapped, width, height) {
 		var previousX = wrapped ? (x - 1 + width) % width : x - 1;
@@ -45,9 +38,9 @@ function clearHtml(htmlObj) {
 		var previousY = wrapped ? (y - 1 + height) % height : y - 1;
 		var nextY = wrapped ? (y + 1) % height : y + 1;
 
-		var prevRow = board[previousY] || []
-		var currRow = board[y]
-		var nextRow = board[nextY] || []
+		var prevRow = board[previousY] || [];
+		var currRow = board[y];
+		var nextRow = board[nextY] || [];
 		
 		return [prevRow[previousX],	prevRow[x],	prevRow[nextX],
 				currRow[previousX],				currRow[nextX],
@@ -64,9 +57,9 @@ function clearHtml(htmlObj) {
 	// Public methods
 	_.prototype = {
 		next: function() {
-			previoud_board = boardCopy(this.board);
-			extendWidth = false;
-			extendHeight = false;
+			var previoud_board = boardCopy(this.board);
+			var extendWidth = false;
+			var extendHeight = false;
 
 			for (var y = 0; y < this.height; y++) {
 				for (var x = 0; x < this.width; x++) {
@@ -151,9 +144,9 @@ function clearHtml(htmlObj) {
 })();
 
 // View logic - recieves the HTML object and grid dimentions and draws the game board.
-(function() {
+(function(document) {
 	// Class definition with private attributes / methods
-	var _ = self.View = function(gameGrid, backButton, nextButton, rewindButton, playButton, pauseButton, generationDisplay, speedDisplay, speedControl, clearButton, boardSizeControls, widthControl, heightControl, cellSizeControl, rulesControl) {
+	var _ = this.View = function(gameGrid, backButton, nextButton, rewindButton, playButton, pauseButton, generationDisplay, speedDisplay, speedControl, clearButton, boardSizeControls, widthControl, heightControl, autoFitButton, cellSizeControl, rulesControl) {
 		// Will hold a <table> element that will display the game grid
 		this.gameGrid = gameGrid;
 
@@ -170,11 +163,13 @@ function clearHtml(htmlObj) {
 		this.boardSizeControls = boardSizeControls;
 		this.widthControl = widthControl;
 		this.heightControl = heightControl;
+        this.autoFitButton = autoFitButton;
 		this.cellSizeControl = cellSizeControl;
 		this.rulesControl = rulesControl;
 
 		this.runGame = false;
 
+        this.autoFit();
 		this.updateSize();
 		this.updateCellSize();
 
@@ -185,11 +180,17 @@ function clearHtml(htmlObj) {
 
 	// Public methods
 	_.prototype = {
+        autoFit: function() {
+            var cellSize = this.cellSizeControl.value;
+            var windowInitialWidth = document.documentElement.clientWidth - 100 > cellSize * 5 ? document.documentElement.clientWidth - 100: cellSize * 5;
+            var windowInitialHeight = document.documentElement.clientHeight - 190 > cellSize * 5 ? document.documentElement.clientHeight - 190 : cellSize * 5;
+            this.widthControl.value = Math.round(windowInitialWidth / cellSize);
+            this.heightControl.value = Math.round(windowInitialHeight / cellSize);
+        },
 		updateSize: function() {
+            var oldBoard = [[]];
 			if (this.game) {
 				oldBoard = this.game.getBoard();
-			} else {
-				oldBoard = [[]];
 			}
 			
 			this.width = this.widthControl.value;
@@ -198,7 +199,7 @@ function clearHtml(htmlObj) {
 			this.createGrid(oldBoard);
 		},
 		createGrid: function(board) {
-			this.checkboxes = []
+			this.checkboxes = [];
 
 			clearHtml(this.gameGrid);
 			var loadingMessage = document.createDocumentFragment();
@@ -216,7 +217,7 @@ function clearHtml(htmlObj) {
 			appending children to it does not cause page reflow (computation of element's 
 			position and geometry). Consequently, using document fragments often results 
 			in better performance. */
-			fragment = document.createDocumentFragment();
+			var fragment = document.createDocumentFragment();
 
 			for (var y=0; y < this.height; y++) {
 				this.checkboxes[y] = [];
@@ -253,7 +254,7 @@ function clearHtml(htmlObj) {
 			return this.checkboxes.map(function(row) {
 				return row.map(function(checkbox) {
 					return checkbox.checked;
-				})
+				});
 			});
 		},
 		initGame: function() {
@@ -317,7 +318,7 @@ function clearHtml(htmlObj) {
 			this.cellSize = this.cellSizeControl.value;
 			for (var y = 0; y < this.height; y++) {
 				for (var x = 0; x < this.width; x++) {
-					this.checkboxes[y][x].style["width"] = this.checkboxes[y][x].style["height"] = '' + this.cellSize + 'px';;
+					this.checkboxes[y][x].style["width"] = this.checkboxes[y][x].style["height"] = '' + this.cellSize + 'px';
 				}
 			}
 		},
@@ -326,7 +327,7 @@ function clearHtml(htmlObj) {
 		},
 		addEventListeners: function() {
 			// Add event listeners
-			gameObject = this;
+			var gameObject = this;
 
 			this.gameGrid.addEventListener("mouseover", function(e) {
 				if(e.buttons == 1 || e.buttons == 3) {
@@ -335,36 +336,37 @@ function clearHtml(htmlObj) {
 			    }
 			});
 			this.gameGrid.addEventListener("click", function() {return gameObject.initGame();});
-
 			this.backButton.addEventListener("click", function() {return gameObject.lastGeneration();});
 			this.nextButton.addEventListener("click", function() {return gameObject.nextGeneration();});
 			this.rewindButton.addEventListener("click", function() {return gameObject.rewind();});
 			this.playButton.addEventListener("click", function() {return gameObject.play();});
 			this.pauseButton.addEventListener("click", function() {return gameObject.pause();});
 			this.boardSizeControls.addEventListener("change", function() {return gameObject.updateSize();});
-			this.cellSizeControl.addEventListener("change", function() {return gameObject.updateCellSize();})
+            this.autoFitButton.addEventListener("click", function() {gameObject.autoFit();return gameObject.updateSize();});
+			this.cellSizeControl.addEventListener("change", function() {return gameObject.updateCellSize();});
 			this.rulesControl.addEventListener("change", function() {return gameObject.initGame();});
 			this.speedControl.addEventListener("change", function() {return gameObject.updateSpeed();});
 			this.clearButton.addEventListener("click", function() {return gameObject.clearBoard();});
 		}
-	}
-})();
+	};
+})(document);
 
-gameGrid = document.getElementsByClassName("gameGrid")[0];
-backButton = document.getElementsByClassName('back')[0];
-nextButton = document.getElementsByClassName('next')[0];
-rewindButton = document.getElementsByClassName('rewind')[0];
-playButton = document.getElementsByClassName('play')[0];
-pauseButton = document.getElementsByClassName('pause')[0];
-generationDisplay = document.getElementsByClassName('generationDisplay')[0];
-speedDisplay = document.getElementsByClassName('speedDisplay')[0];
-speedControl = document.getElementsByClassName('speedControl')[0];
-clearButton = document.getElementsByClassName('clear')[0];
-boardSizeControls = document.getElementsByClassName('board-size')[0];
-widthControl = document.getElementsByClassName('widthControl')[0];
-heightControl = document.getElementsByClassName('heightControl')[0];
-cellSizeControl = document.getElementsByClassName('cellSizeControl')[0];
-rulesControl = document.getElementsByClassName('rulesControl')[0];
+var gameGrid = document.getElementsByClassName("gameGrid")[0];
+var backButton = document.getElementsByClassName('back')[0];
+var nextButton = document.getElementsByClassName('next')[0];
+var rewindButton = document.getElementsByClassName('rewind')[0];
+var playButton = document.getElementsByClassName('play')[0];
+var pauseButton = document.getElementsByClassName('pause')[0];
+var generationDisplay = document.getElementsByClassName('generationDisplay')[0];
+var speedDisplay = document.getElementsByClassName('speedDisplay')[0];
+var speedControl = document.getElementsByClassName('speedControl')[0];
+var clearButton = document.getElementsByClassName('clear')[0];
+var boardSizeControls = document.getElementsByClassName('board-size')[0];
+var widthControl = document.getElementsByClassName('widthControl')[0];
+var heightControl = document.getElementsByClassName('heightControl')[0];
+var autoFitButton = document.getElementsByClassName('autoFit')[0];
+var cellSizeControl = document.getElementsByClassName('cellSizeControl')[0];
+var rulesControl = document.getElementsByClassName('rulesControl')[0];
 
 // Setup initial game
 var mainGame = new View(gameGrid,
@@ -380,5 +382,6 @@ var mainGame = new View(gameGrid,
 						boardSizeControls,
 						widthControl,
 						heightControl,
+                        autoFitButton,
 						cellSizeControl,
 						rulesControl);
